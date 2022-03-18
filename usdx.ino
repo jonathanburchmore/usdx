@@ -2160,10 +2160,11 @@ void dsp_tx_cw()
 { // jitter dependent things first
 #ifdef KEY_CLICK
   if(OCR1BL < lut[255]) { //check if already ramped up: ramp up of amplitude 
-     for(uint16_t i = 31; i != 0; i--) {   // soft rising slope against key-clicks
-        OCR1BL = lut[pgm_read_byte_near(ramp[i])];
+     uint16_t i = 31; // soft rising slope against key-clicks
+     do {
+        OCR1BL = lut[pgm_read_byte_near(ramp[--i])];
         delayMicroseconds(60);
-     }
+     } while ( i != 0 );
   }
 #endif // KEY_CLICK
   OCR1BL = lut[255];
