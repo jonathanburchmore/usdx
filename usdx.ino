@@ -1603,7 +1603,7 @@ public:
   }
   void powerDown(){
     SendRegister(3, 0b11111111); // Disable all CLK outputs
-    SendRegister(24, 0b00100000); // Disable state: LOW state when disabled
+    SendRegister(24, 0b00010000); // Disable state: LOW state when disabled
     SendRegister(25, 0b00000000); // Disable state: LOW state when disabled
     for(int addr = 16; addr != 24; addr++) SendRegister(addr, 0b10000000);  // Conserve power when output is disabled
     SendRegister(187, 0);        // Disable fanout (power-safe)
