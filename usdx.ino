@@ -2162,7 +2162,7 @@ void dsp_tx_cw()
   if(OCR1BL < lut[255]) { //check if already ramped up: ramp up of amplitude 
      uint16_t i = 31; // soft rising slope against key-clicks
      do {
-        OCR1BL = lut[pgm_read_byte_near(ramp[--i])];
+        OCR1BL = lut[&pgm_read_byte_near(ramp[--i])];
         delayMicroseconds(60);
      } while ( i != 0 );
   }
@@ -3865,7 +3865,7 @@ void switch_rxtx(uint8_t tx_enable){
 #ifdef KEY_CLICK
       if(OCR1BL != 0) {
        for(uint16_t i = 0; i != 31; i++) {   // ramp down of amplitude: soft falling edge to prevent key clicks
-         OCR1BL = lut[pgm_read_byte_near(ramp[i])];
+         OCR1BL = lut[pgm_read_byte_near(&ramp[i])];
           delayMicroseconds(60);
        }
       }
