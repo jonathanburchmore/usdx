@@ -4789,12 +4789,73 @@ void fatal(const __FlashStringHelper* msg, int value = 0, char unit = '\0') {
   wdt_reset();
 }
 
+/*
+ * BS170 drive correction table based on data collected by Dave M0JTS
+ *
+ * Index is the 0..255 based percentage of maximum drive, value is the
+ * PWM required to hit that area of the measured curve.
+ */
+
+const uint8_t bs170_correction[] PROGMEM = {
+    0,   1,   2,   3,   4,   5,   6,   7,   8,   9,
+   10,  10,  12,  14,  15,  17,  19,  20,  22,  23,
+   25,  26,  28,  29,  30,  31,  31,  32,  32,  33,
+   33,  34,  34,  35,  35,  36,  36,  37,  37,  38,
+   38,  39,  39,  40,  40,  41,  41,  42,  42,  43,
+   43,  44,  44,  45,  45,  45,  46,  46,  47,  47,
+   48,  48,  49,  49,  50,  50,  50,  51,  51,  52,
+   52,  53,  53,  54,  54,  54,  55,  55,  56,  56,
+   57,  57,  57,  58,  58,  59,  59,  60,  60,  60,
+   61,  61,  62,  62,  63,  63,  63,  64,  64,  65,
+   65,  65,  66,  66,  67,  67,  68,  68,  68,  69,
+   69,  70,  70,  70,  71,  71,  72,  72,  72,  73,
+   73,  74,  74,  74,  75,  75,  76,  76,  76,  77,
+   77,  78,  78,  78,  79,  79,  80,  80,  80,  81,
+   81,  82,  82,  83,  83,  84,  84,  85,  85,  85,
+   86,  86,  87,  87,  88,  88,  89,  89,  90,  90,
+   90,  91,  92,  92,  93,  94,  94,  95,  95,  96,
+   97,  97,  98,  99,  99, 100, 100, 101, 102, 103,
+  103, 104, 105, 105, 106, 107, 108, 108, 109, 110,
+  110, 111, 112, 113, 114, 115, 115, 116, 117, 118,
+  119, 120, 120, 122, 123, 124, 125, 127, 128, 129,
+  130, 131, 132, 133, 134, 135, 135, 136, 137, 138,
+  139, 140, 140, 143, 145, 148, 150, 153, 155, 158,
+  160, 165, 170, 173, 175, 178, 180, 182, 184, 185,
+  187, 189, 190, 193, 195, 198, 210, 213, 215, 218,
+  220, 230, 233, 235, 238, 240
+};
+
 //refresh LUT based on pwm_min, pwm_max
 void build_lut()
 {
-  for(uint16_t i = 0; i != 256; i++)    // refresh LUT based on pwm_min, pwm_max
-    lut[i] = (i * (pwm_max - pwm_min)) / 255 + pwm_min;
-    //lut[i] = min(pwm_max, (float)106*log(i) + pwm_min);  // compressed microphone output: drive=0, pwm_min=115, pwm_max=220
+  uint16_t i;
+  uint8_t min_index, max_index, index_span;
+
+  /*
+   * Locate the approximate positions of pwm_min and pwm_max in the correction table.
+   */
+
+  for ( min_index = 0; min_index < 255 && pgm_read_byte_near( &bs170_correction[ min_index ] ) < pwm_min; min_index++ )
+  {
+    ;
+  }
+
+  for ( max_index = 255; max_index > min_index && pgm_read_byte_near( &bs170_correction[ max_index ] ) > pwm_max; max_index-- )
+  {
+    ;
+  }
+
+  index_span = max_index - min_index;
+
+  /*
+   * "stretch" the BS170 correction table between min_index and max_index to span 0..255 in lut.  This retains
+   * the shape of the curve from bs170_correction.
+   */
+
+  for ( i = 0; i < 256; i++ )
+  {
+    lut[ i ] = pgm_read_byte_near( &bs170_correction[ min_index + ( ( index_span * ( i + 1 ) ) / 256 ) ] );
+  }
 }
 
 #ifdef SWR_METER
