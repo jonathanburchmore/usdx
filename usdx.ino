@@ -4854,7 +4854,7 @@ void build_lut()
 
   for ( i = 0; i < 256; i++ )
   {
-    lut[ i ] = pgm_read_byte_near( &bs170_correction[ min_index + ( ( index_span * ( i + 1 ) ) / 256 ) ] );
+    lut[ i ] = pgm_read_byte_near( &bs170_correction[ min_index + ( ( index_span * i ) / 255 ) ] );
   }
 }
 
